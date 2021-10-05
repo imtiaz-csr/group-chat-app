@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Chat with file sharing</title>
+    <link rel="stylesheet" href="./styles/style.css" />
+    <script src="./scripts/jquery.js"></script>
+    <script src="./scripts/socket.io.js"></script>
+    <script>
+      $(document).ready(() => {
+        $(".closebtn").click(() => {
+          $("#side-nav").animate({ width: "0px" }, 300);
+        });
+        $(".icon").click(() => {
+          $("#side-nav").animate({ width: "250px" }, 300);
+        });
+        /*
+         * Socket
+         */
+        $("#displayname").hide();
+        $("#nameinput").hide();
+        $("#rooms").hide();
+        $("#msginput").hide();
+        $("#messages").hide();
+        var socket = io.connect("http://localhost:9000");
+        socket.on("connect", () => {
+          console.log("connected");
+          $("#nameinput").show();
+        });
+        socket.on('init', (data)=>{
+            $("#nameinput").hide();
+            $('#uname').html(data.user);
+            $("#displayname").show();
+            //console.log(data)
+            $('#gnames').empty();
+            data.rooms.forEach(v => {
+                $('#gnames').append(`<option value='${v}'>${v}</option>`)
+            });
+            $('#gnames').append(`<option value="" selected>Select group</option>`);
+            $("#rooms").show();
+            $('#leave').attr('disabled', 'disabled');
+        });
+        socket.on('joinSuccess', m=>{
+            $("#messages").show();
+            $("#nameinput").hide();
+            $('#leave').removeAttr('disabled');
+            $("#msginput").show();
+        });
+        socket.on('userlist', users=>{
+          var uname = $('#uname').html();
+            $('#users').empty();
+            users.forEach((v, i)=>{
+              if(v== uname)
+                $('#users').append(`<li class="l-group-i active">${v}</li>`);
+              else
+              $('#users').append(`<li class="l-group-i">${v}</li>`);
+            });
+        });
+        $("#connect").click(() => {
+          if ($("#dname").val() != "") {
+            socket.emit('addme', $("#dname").val());
+          }
+        });
+
+        $('#join').click(()=>{
+            if($('#gnames').val()!= '')
+                socket.emit('join', $('#gnames').val())
+        })
+      });
+    </script>
+  </head>
+  <body>
+    <nav class="sidebar" id="side-nav">
+      <a href="javascript:void(0)" class="closebtn"
+        ><i class="fa fa-times-circle-o"></i
+      ></a>
+      <ul class="sidemenu">
+        <li class="item"><a href="./index.html" class="link">Home</a></li>
+        <li class="item"><a href="./chat.html" class="link">Chat</a></li>
+      </ul>
+    </nav>
+    <nav class="navbar" id="topbar">
+      <ul class="menu">
+        <li class="menu-item always">
+          <a href="avascript:void(0)" class="nav-link icon"
+            ><i class="fa fa-bars"></i
+          ></a>
+        </li>
+        <li class="menu-item always">
+          <a href="./index.html" class="nav-link brand">Let's Chat</a>
+        </li>
+        <li class="menu-item">
+          <a href="./index.html" class="nav-link">Home</a>
+        </li>
+        <li class="menu-item">
+          <a href="./chat.html" class="nav-link">Chat</a>
+        </li>
+      </ul>
+    </nav>
+    <div class="container">
+      <div class="row" id="displayname">
+        <div class="col-1">Display name:</div>
+        <div class="col-3" id="uname">Habibi</div>
+      </div>
+      <div class="row" id="nameinput">
+        <div class="col-2">
+          <div class="input-add-on">
+            <input
+              type="text"
+              class="input-add-on-field"
+              id="dname"
+              placeholder="Display name"
+            />
+            <button class="input-add-on-item" id="connect">Connect</button>
+          </div>
+        </div>
+        <div class="col-2">&nbsp;</div>
+      </div>
+      <div class="row" id="rooms">
+        <div class="col-2">
+          <div class="input-add-on">
+            <select type="text" class="input-add-on-field" id="gnames">
+              <option value="" selected>Select group</option>
+            </select>
+            <button class="input-add-on-item" id="join">Join</button>
+            <button class="input-add-on-item" id="leave">Leave</button>
+          </div>
+        </div>
+        <div class="col-2">&nbsp;</div>
+      </div>
+      <div class="row" id="msginput">
+        <div class="col-2">&nbsp;</div>
+        <div class="col-2">
+          <div class="input-add-on">
+            <input
+              type="text"
+              class="input-add-on-field"
+              id="msg"
+              placeholder="Message"
+            />
+
+            <button class="input-add-on-item">Send</button>
+            <button class="input-add-on-item"><i class="fa fa-file"></i></button>
+          </div>
+        </div>
+        
+      </div>
+      <div id="messages">
+        
+        <div class="row">
+          <div class="col-1">
+            <h3 class="sub-head" style="width: calc(100% - 2.5rem)">Users</h3>
+            <ul id="users" class="l-group"></ul>
+          </div>
+          <div class="col-3">
+            
+            <div class="input-add-on">
+              <input
+                type="text"
+                class="input-add-on-field"
+                id="msg"
+                placeholder="Message"
+              />
+  
+              <button class="input-add-on-item">Send</button>
+              <button class="input-add-on-item"><i class="fa fa-file"></i></button>
+            </div>
+            <h3 class="sub-head" style="width: calc(100% - 2.5rem)">Conversation</h3>
+            <ul class="l-group">
+              <li class="l-group-i">You: Hello</li>
+              <li class="l-group-i">You: Hello</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
